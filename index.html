@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asociación de Fútbol Presidente Ríos - Sistema Oficial</title>
+    <!-- Librerías oficiales para generación de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fbeee6; margin: 0; padding: 20px; color: #333; }
+        .container { width: 100%; max-width: 1050px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(211, 84, 0, 0.1); }
+        
+        /* Encabezado Institucional */
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ff5722; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .logo-contenedor { display: flex; align-items: center; gap: 15px; }
+        .logo-asociacion-principal { width: 85px; height: 85px; object-fit: contain; }
+        h1 { color: #d35400; margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .subtitulo-asociacion { color: #7f8c8d; margin-top: 5px; margin-bottom: 25px; font-size: 15px; border-left: 3px solid #ff5722; padding-left: 10px; }
+        
+        /* Botones */
+        button { padding: 9px 16px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-login-trigger { background-color: #2c3e50; color: white; border: none; }
+        .btn-login-trigger:hover { background-color: #1a252f; }
+        .btn-azul { background-color: #2980b9; color: white; border: none; }
+        .btn-azul:hover { background-color: #2471a3; }
+        .btn-naranja { background-color: #ff5722; color: white; border: none; }
+        .btn-naranja:hover { background-color: #e64a19; }
+        .btn-rojo { background-color: #e74c3c; color: white; border: none; }
+        .btn-rojo:hover { background-color: #c0392b; }
+        .btn-publicar { background-color: #e67e22; color: white; border: none; padding: 12px 24px; font-size: 16px; margin-left: auto; display: block; box-shadow: 0 4px 6px rgba(230, 126, 34, 0.2); }
+        .btn-pdf { background-color: #27ae60; color: white; border: none; font-size: 12px; padding: 6px 12px; margin-top: 5px; }
+        .btn-pdf:hover { background-color: #219653; }
+        .btn-sincro { background-color: #8e44ad; color: white; border: none; font-size: 14px; padding: 9px 16px; }
+        .btn-sincro:hover { background-color: #732d91; }
+        
+        /* Paneles de Roles */
+        .panel-rol { background: #fff5f0; padding: 20px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #ffccbc; }
+        .panel-rol h2 { margin-top: 0; color: #d35400; border-bottom: 2px solid #ffccbc; padding-bottom: 8px; font-size: 18px; text-transform: uppercase; }
+        .seccion-modulo { background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .seccion-modulo h3 { margin-top: 0; color: #2c3e50; font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .flex-inputs { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        
+        input, select { padding: 9px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; background: white; }
+        
+        /* Tablas */
+        .titulo-seccion-publica { background: #d35400; color: white; padding: 12px; margin-top: 35px; border-radius: 4px; font-size: 16px; font-weight: bold; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 25px; background: white; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #2c3e50; color: white; font-size: 12px; text-transform: uppercase; }
+        tr:hover { background-color: #fffbf9; }
+        
+        /* Tarjetas de Alerta */
+        .badge-deudor { background-color: #fde8e8; color: #e74c3c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: 1px solid #f8b4b4; }
+        .badge-al-dia { background-color: #def7ec; color: #03543f; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .tarjeta-suspension { background: #fde8e8; border-left: 4px solid #e74c3c; padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+        
+        /* Modales y Utilidades */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(2px); }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; max-width: 350px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid #ff5722; }
+        .oculto { display: none !important; }
+        .badge-rol-activo { background: #e74c3c; color: white; padding: 4px 10px; border-radius: 3px; font-size: 12px; margin-left: 12px; font-weight: bold; text-transform: uppercase; }
+        .comprobante-preview { max-width: 50px; max-height: 50px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .comprobante-preview:hover { transform: scale(3); position: relative; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- ENCABEZADO -->
+    <div class="header-bar">
+        <div class="logo-contenedor">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Football_orange.svg/120px-Football_orange.svg.png" class="logo-asociacion-principal" alt="Logo">
+            <div>
+                <h1>Asociación de Fútbol Presidente Ríos</h1>
+                <span id="badgeRolActivo" class="badge-rol-activo oculto"></span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-sincro" onclick="descargarDeLaNube()">🔄 Sincronizar Nube</button>
+            <button id="btnAcceso" class="btn-login-trigger" onclick="abrirLogin()">🔑 Acceso Interno</button>
+            <button id="btnCerrarSesion" class="btn-rojo oculto" onclick="cerrarSesion()">🔒 Salir de Panel</button>
+        </div>
+    </div>
+    
+    <div class="subtitulo-asociacion">
+        📌 Plataforma Oficial Unificada en la Nube • Campeonato General, Control Financiero y Registro Disciplinario.
+    </div>
+
+    <!-- ================= PANEL DIRECTIVA (admin123) ================= -->
+    <div id="panelAdmin" class="panel-rol oculto">
+        <h2>⚙️ Panel de Control - Mesa Directiva</h2>
+        <div class="seccion-modulo">
+            <h3>➕ Registrar Club de la Asociación</h3>
+            <div class="flex-inputs">
+                <input type="text" id="nuevoNombre" placeholder="Nombre del Club">
+                <select id="nuevaSerie">
+                    <option value="Adultos">Adultos</option>
+                    <option value="Senior">Senior</option>
+                    <option value="Super Senior">Super Senior</option>
+                </select>
+                <input type="file" id="nuevoLogo" accept="image/*">
+                <button class="btn-azul" onclick="agregarEquipo()">Guardar Club</button>
+            </div>
+        </div>
+        <div class="seccion-modulo">
+            <h3>⚽ Cargar Marcador Oficial</h3>
+            <div class="flex-inputs">
+                <select id="local" onchange="filtrarVisita()"></select>
+                <input type="number" id="golesLocal" min="0" value="0" style="width:50px; text-align:center;">
+                <span style="font-weight:bold;">Vs</span>
+                <input type="number" id="golesVisita" min="0" value="0" style="width:50px; text-align:center;">
+                <select id="visita"></select>
+                <button class="btn-naranja" onclick="procesarPartido()">Anotar Resultado</button>
+            </div>
+        </div>
+        <button class="btn-publicar" onclick="publicarTodo()" style="margin-top:10px;">📢 Publicar y Subir Cambios a Internet</button>
+        <button class="btn-rojo" onclick="reiniciarTodo()" style="font-size:11px; margin-top:15px;">⚠️ Reiniciar Nube por Completo</button>
+    </div>
+
+    <!-- ================= PANEL TESORERÍA (teso123) ================= -->
+    <div id="panelTesoreria" class="panel-rol oculto">
+        <h2>💰 Gestión de Tesorería y Finanzas</h2>
+        <div class="seccion-modulo">
+            <h3>💵 Asignar Deuda / Cobro a Club</h3>
+            <div class="flex-inputs">
+                <select id="tesoClubSelect"></select>
+                <input type="text" id="tesoDetalle" placeholder="Detalle (Ej: Cuota de Incorporación, Multa...)">
+                <input type="number" id="tesoMonto" placeholder="Monto ($)" min="0">
+                <button class="btn-naranja" onclick="agregarDeuda()">Cargar Cargo Financiero</button>
+            </div>
+        </div>
+        <div class="seccion-modulo">
+            <h3>📝 Registrar Pago / Comprobante</h3>
+            <div class="flex-inputs">
+                <select id="tesoDeudorSelect"></select>
+                <label style="font-size:13px; font-weight:bold;">Subir Comprobante (Foto/PDF):</label>
+                <input type="file" id="tesoComprobante" accept="image/*">
+                <button class="btn-azul" onclick="registrarPagoClub()">Aprobar Pago e Inyectar Recibo</button>
+            </div>
+        </div>
+        <button class="btn-publicar" onclick="publicarTodo()">📢 Publicar Cambios de Tesorería</button>
+    </div>
+
+    <!-- ================= PANEL DISCIPLINA Y GOLEADORES (control123) ================= -->
+    <div id="panelControl" class="panel-rol oculto">
+        <h2>🏃 Control de Goleadores, Tarjetas y Sanciones</h2>
+        <div class="seccion-modulo">
+            <h3>⚽ Registro de Goleadores de la Fecha</h3>
+            <div class="flex-inputs">
+                <select id="goleadorClubSelect"></select>
+                <input type="text" id="goleadorJugador" placeholder="Nombre del Jugador">
+                <input type="number" id="goleadorCantidad" value="1" min="1" style="width:50px; text-align:center;">
+                <button class="btn-azul" onclick="agregarGoles()">Cargar Goles</button>
+            </div>
+        </div>
+        <div class="seccion-modulo">
+            <h3>🟨 🟥 Registro de Amonestaciones y Sanciones</h3>
+            <div class="flex-inputs">
+                <select id="sancionClubSelect"></select>
+                <input type="text" id="sancionJugador" placeholder="Nombre del Jugador">
+                <select id="sancionTipo">
+                    <option value="amarilla">🟨 Tarjeta Amarilla Individual</option>
+                    <option value="doble_amarilla">🟨🟨 Doble Amarilla en un Partido (Roja)</option>
+                    <option value="roja_directa">🟥 Tarjeta Roja Directa</option>
+                </select>
+                <button class="btn-rojo" onclick="aplicarSancion()">Aplicar Castigo</button>
+            </div>
+        </div>
+        <button class="btn-publicar" onclick="publicarTodo()">📢 Publicar Cambios de Disciplina/Goles</button>
+    </div>
+
+
+    <!-- ================= VISTA PÚBLICA ================= -->
+    <div id="vistaPublica">
+        <!-- Tablas de Posiciones -->
+        <div class="titulo-seccion-publica" style="background:#2c3e50; padding:15px; border-radius:6px;">
+            <span style="font-size:18px;">📊 CLASIFICACIONES GENERALES</span>
+            <button class="btn-pdf" onclick="descargarPDFPosiciones()">📄 Descargar Clasificaciones (PDF)</button>
+        </div>
+        <div id="contenedorTablas"></div>
+
+        <!-- Goleadores e Sanciones -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+            <div>
+                <div class="titulo-seccion-publica">
+                    <span>⚽ GOLEADORES</span>
+                    <button class="btn-pdf" onclick="descargarPDFGoleadores()">📄 PDF</button>
+                </div>
+                <table id="tablaGoleadores">
+                    <thead><tr><th>Jugador</th><th>Club</th><th>Goles</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div>
+                <div class="titulo-seccion-publica">
+                    <span>⚖️ CONTROL DISCIPLINARIO</span>
+                    <button class="btn-pdf" onclick="descargarPDFSanciones()">📄 PDF</button>
+                </div>
+                <div id="contenedorSanciones" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <!-- Balance Financiero General -->
+        <div class="titulo-seccion-publica">
+            <span>💰 BALANCE DE TESORERÍA</span>
+            <button class="btn-pdf" onclick="descargarPDFFinanzas()">📄 Descargar Reporte Financiero (PDF)</button>
+        </div>
+        <table id="tablaFinanzas">
+            <thead>
+                <tr><th>Club</th><th>Estado Cuenta</th><th>Deuda Acumulada</th><th>Detalle Pendiente</th><th>Comprobante</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- MODAL FLOTANTE DE ACCESO MULTI-ROL -->
+<div id="modalLogin" class="modal">
+    <div class="modal-content">
+        <h3 style="color: #d35400; margin-top: 0;">🔒 Control de Acceso Unificado</h3>
+        <select id="rolSelect" style="width: 100%; margin-bottom: 15px; padding: 10px;">
+            <option value="admin">Mesa Directiva</option>
+            <option value="tesoreria">Departamento de Tesorería</option>
+            <option value="control">Comisión de Control y Disciplina</option>
+        </select>
+        <input type="password" id="passwordInput" placeholder="Clave de Seguridad" style="width: 100%; box-sizing: border-box; margin-bottom: 20px; text-align: center;">
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="cerrarLogin()" style="background: #e2e8f0; border: none; color: #4a5568;">Cancelar</button>
+            <button class="btn-naranja" onclick="verificarLogin()">Ingresar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ================= CONFIGURACIÓN SERVIDOR INTEGRADO =================
+const API_KEY = "$2a$10$ZXp879DibVdPK1an1NXcruLnO3RsmIHnn1KIb.zUljmWyZvocn2SW";
+let BIN_ID = localStorage.getItem('pr_cloud_bin_id') || "";
+// ===================================================================
+
+const CREDENCIALES = { admin: "admin123", tesoreria: "teso123", control: "control123" };
+const LOGO_DEFECTO = "https://cdn-icons-png.flaticon.com/512/5323/5323414.png";
+
+let dbBorrador = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
+let dbOficial = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
+
+function abrirLogin() { document.getElementById('modalLogin').style.display = 'flex'; }
+function cerrarLogin() { document.getElementById('modalLogin').style.display = 'none'; document.getElementById('passwordInput').value = ''; }
+
+function verificarLogin() {
+    const rol = document.getElementById('rolSelect').value;
+    const pass = document.getElementById('passwordInput').value;
+    
+    if (pass === CREDENCIALES[rol]) {
+        ocultarTodosLosPaneles();
+        document.getElementById('btnAcceso').classList.add('oculto');
+        document.getElementById('btnCerrarSesion').classList.remove('oculto');
+        const badge = document.getElementById('badgeRolActivo');
+        badge.classList.remove('oculto');
+        
+        if (rol === 'admin') { document.getElementById('panelAdmin').classList.remove('oculto'); badge.innerText = "Modo Directiva Activo"; }
+        else if (rol === 'tesoreria') { document.getElementById('panelTesoreria').classList.remove('oculto'); badge.innerText = "Modo Tesorería Activo"; }
+        else if (rol === 'control') { document.getElementById('panelControl').classList.remove('oculto'); badge.innerText = "Modo Disciplina Activo"; }
+        actualizarSelectores();
+        cerrarLogin();
+    } else {
+        alert("Contraseña incorrecta.");
+    }
+}
+
+function cerrarSesion() {
+    ocultarTodosLosPaneles();
+    document.getElementById('btnAcceso').classList.remove('oculto');
+    document.getElementById('btnCerrarSesion').classList.add('oculto');
+    document.getElementById('badgeRolActivo').classList.add('oculto');
+}
+
+function ocultarTodosLosPaneles() {
+    document.getElementById('panelAdmin').classList.add('oculto');
+    document.getElementById('panelTesoreria').classList.add('oculto');
+    document.getElementById('panelControl').classList.add('oculto');
+}
+
+// INICIALIZADOR Y SOLICITUDES DE RED AUTOMÁTICAS
+async function inicializarBaseDeDatos() {
+    if (!BIN_ID) {
+        try {
+            const res = await fetch("https://api.jsonbin.io/v3/b", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY, "X-Bin-Private": "false" },
+                body: JSON.stringify({ equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} })
+            });
+            const data = await res.json();
+            if (data.metadata && data.metadata.id) {
+                BIN_ID = data.metadata.id;
+                localStorage.setItem('pr_cloud_bin_id', BIN_ID);
+                alert("¡Base de datos virtual configurada en la nube con éxito para la Asociación Presidente Ríos!");
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error("Error al aprovisionar almacenamiento remoto:", err);
+        }
+    } else {
+        await descargarDeLaNube();
+    }
+}
+
+async function descargarDeLaNube() {
+    if(!BIN_ID) return;
+    try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+            headers: { "X-Master-Key": API_KEY }
+        });
+        const data = await res.json();
+        if(data.record) {
+            dbBorrador = data.record;
+            dbOficial = JSON.parse(JSON.stringify(data.record));
+            actualizarSelectores();
+            renderizarTodoPublico();
+            console.log("Datos actualizados desde el servidor remoto.");
+        }
+    } catch(err) {
+        console.error("Error al sincronizar datos entrantes:", err);
+    }
+}
+
+async function subirALaNube() {
+    if(!BIN_ID) return;
+    try {
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+            body: JSON.stringify(dbBorrador)
+        });
+        console.log("Sincronización remota saliente completa.");
+    } catch(err) {
+        alert("Error de red: No se pudieron resguardar los cambios en el servidor central.");
+    }
+}
+
+function agregarEquipo() {
+    const nombre = document.getElementById('nuevoNombre').value.trim();
+    const serie = document.getElementById('nuevaSerie').value;
+    const archivoInput = document.getElementById('nuevoLogo');
+
+    if (!nombre) return alert("Ingrese el nombre del club.");
+    if (dbBorrador.equipos[nombre]) return alert("Este club ya está registrado.");
+
+    if (archivoInput.files && archivoInput.files[0]) {
+        const lector = new FileReader();
+        lector.onload = function(e) { registrarEfectivo(nombre, serie, e.target.result); };
+        lector.readAsDataURL(archivoInput.files[0]);
+    } else {
+        registrarEfectivo(nombre, serie, LOGO_DEFECTO);
+    }
+}
+
+function registrarEfectivo(nombre, serie, logo) {
+    dbBorrador.equipos[nombre] = { nombre, serie, logo, pj:0, pg:0, pe:0, pp:0, gf:0, gc:0, dg:0, pts:0 };
+    if (!dbBorrador.finanzas[nombre]) dbBorrador.finanzas[nombre] = { deuda: 0, detalle: "Sin deudas", comprobante: null };
+    document.getElementById('nuevoNombre').value = "";
+    document.getElementById('nuevoLogo').value = "";
+    actualizarSelectores();
+    alert("Club guardado temporalmente. Presiona 'Publicar' al finalizar.");
+}
+
+function actualizarSelectores() {
+    const selects = ['local', 'tesoClubSelect', 'tesoDeudorSelect', 'goleadorClubSelect', 'sancionClubSelect'];
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = id === 'local' ? '<option value="">-- Seleccionar Local --</option>' : '';
+            Object.keys(dbBorrador.equipos).forEach(n => {
+                el.innerHTML += `<option value="${n}">${n} [${dbBorrador.equipos[n].serie}]</option>`;
+            });
+        }
+    });
+    filtrarVisita();
+}
+
+function filtrarVisita() {
+    const local = document.getElementById('local').value;
+    const visitaSelect = document.getElementById('visita');
+    if (!visitaSelect) return;
+    visitaSelect.innerHTML = "";
+    if (!local) return;
+    const serieLocal = dbBorrador.equipos[local].serie;
+    Object.keys(dbBorrador.equipos).forEach(n => {
+        if (dbBorrador.equipos[n].serie === serieLocal && n !== local) {
+            visitaSelect.innerHTML += `<option value="${n}">${n}</option>`;
+        }
+    });
+}
+
+function procesarPartido() {
+    const loc = document.getElementById('local').value;
+    const vis = document.getElementById('visita').value;
+    const gLoc = parseInt(document.getElementById('golesLocal').value) || 0;
+    const gVis = parseInt(document.getElementById('golesVisita').value) || 0;
+
+    if (!loc || !vis) return alert("Seleccione ambos clubes.");
+
+    dbBorrador.equipos[loc].pj++; dbBorrador.equipos[vis].pj++;
+    dbBorrador.equipos[loc].gf += gLoc; dbBorrador.equipos[loc].gc += gVis;
+    dbBorrador.equipos[vis].gf += gVis; dbBorrador.equipos[vis].gc += gLoc;
+
+    if (gLoc > gVis) { dbBorrador.equipos[loc].pg++; dbBorrador.equipos[loc].pts += 3; dbBorrador.equipos[vis].pp++; }
+    else if (gVis > gLoc) { dbBorrador.equipos[vis].pg++; dbBorrador.equipos[vis].pts += 3; dbBorrador.equipos[loc].pp++; }
+    else { dbBorrador.equipos[loc].pe++; dbBorrador.equipos[loc].pts += 1; dbBorrador.equipos[vis].pe++; dbBorrador.equipos[vis].pts += 1; }
+
+    dbBorrador.equipos[loc].dg = dbBorrador.equipos[loc].gf - dbBorrador.equipos[loc].gc;
+    dbBorrador.equipos[vis].dg = dbBorrador.equipos[vis].gf - dbBorrador.equipos[vis].gc;
+    alert("Resultado guardado en borrador.");
+}
+
+function agregarDeuda() {
+    const club = document.getElementById('tesoClubSelect').value;
+    const detalle = document.getElementById('tesoDetalle').value.trim();
+    const monto = parseInt(document.getElementById('tesoMonto').value) || 0;
+    if (!club || !detalle || monto <= 0) return alert("Datos inválidos.");
+    
+    dbBorrador.finanzas[club].deuda += monto;
+    dbBorrador.finanzas[club].detalle = detalle;
+    dbBorrador.finanzas[club].comprobante = null; 
+    document.getElementById('tesoDetalle').value = "";
+    document.getElementById('tesoMonto').value = "";
+    alert("Cargo registrado en borrador.");
+}
+
+function registrarPagoClub() {
+    const club = document.getElementById('tesoDeudorSelect').value;
+    const archivoInput = document.getElementById('tesoComprobante');
+    if (!club) return alert("Seleccione el club.");
+    
+    if (archivoInput.files && archivoInput.files[0]) {
+        const lector = new FileReader();
+        lector.onload = function(e) {
+            dbBorrador.finanzas[club].deuda = 0;
+            dbBorrador.finanzas[club].detalle = "Pagado / Al día";
+            dbBorrador.finanzas[club].comprobante = e.target.result;
+            alert("Pago procesado en borrador.");
+        };
+        lector.readAsDataURL(archivoInput.files[0]);
+    } else {
+        alert("Suba una captura del comprobante.");
+    }
+}
+
+function agregarGoles() {
+    const jugador = document.getElementById('goleadorJugador').value.trim();
+    const club = document.getElementById('goleadorClubSelect').value;
+    const cant = parseInt(document.getElementById('goleadorCantidad').value) || 1;
+    if (!jugador || !club) return alert("Complete los datos.");
+    
+    if (!dbBorrador.goleadores[jugador]) dbBorrador.goleadores[jugador] = { jugador, club, goles: 0 };
+    dbBorrador.goleadores[jugador].goles += cant;
+    document.getElementById('goleadorJugador').value = "";
+    alert("Goles añadidos a borrador.");
+}
+
+function aplicarSancion() {
+    const jugador = document.getElementById('sancionJugador').value.trim();
+    const club = document.getElementById('sancionClubSelect').value;
+    const tipo = document.getElementById('sancionTipo').value;
+    
+    if (!jugador || !club) return alert("Complete los campos.");
+    if (!dbBorrador.disciplina[jugador]) {
+        dbBorrador.disciplina[jugador] = { jugador, club, amarillas: 0, rojas: 0, suspension: 0, motivo: "" };
+    }
+    
+    let j = dbBorrador.disciplina[jugador];
+    if (tipo === 'amarilla') {
+        j.amarillas++;
+        if (j.amarillas >= 4) {
+            j.amarillas = 0; j.rojas++; j.suspension += 1; j.motivo = "Acumulación de 4 Tarjetas Amarillas";
+            alert("Llegó a 4 amarillas: 1 fecha de suspensión.");
+        } else { alert("Amarilla cargada."); }
+    } else if (tipo === 'doble_amarilla') {
+        j.rojas++; j.suspension += 1; j.motivo = "Expulsión por Doble Amarilla";
+        alert("Doble Amarilla: 1 fecha de suspensión.");
+    } else if (tipo === 'roja_directa') {
+        j.rojas++; j.suspension += 2; j.motivo = "Tarjeta Roja Directa";
+        alert("Roja Directa: 2 fechas de suspensión.");
+    }
+    document.getElementById('sancionJugador').value = "";
+}
+
+// PUBLICAR EN LA NUBE
+async function publicarTodo() {
+    dbOficial = JSON.parse(JSON.stringify(dbBorrador));
+    renderizarTodoPublico();
+    await subirALaNube();
+    alert("🚀 ¡Plataforma Sincronizada con Internet con Éxito para todos los terminales!");
+}
+
+async function reiniciarTodo() {
+    if (confirm("¿Borrar permanentemente toda la base de datos de la nube?")) {
+        dbBorrador = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
+        dbOficial = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
+        actualizarSelectores();
+        renderizarTodoPublico();
+        await subirALaNube();
+    }
+}
+
+function determinarOrdenSeries(serie) {
+    const orden = { "Adultos": 1, "Senior": 2, "Super Senior": 3 };
+    return orden[serie] || 99;
+}
+
+function renderizarTodoPublico() {
+    const contenedorTablas = document.getElementById('contenedorTablas');
+    contenedorTablas.innerHTML = "";
+    const listaEquipos = Object.values(dbOficial.equipos);
+    
+    if (listaEquipos.length === 0) {
+        contenedorTablas.innerHTML = `<p style="color:#d35400; text-align:center; font-weight:bold; padding:15px; background:#fff5f0;">🏆 No hay tablas oficiales publicadas.</p>`;
+    } else {
+        const series = [...new Set(listaEquipos.map(e => e.serie))].sort((a,b)=>determinarOrdenSeries(a)-determinarOrdenSeries(b));
+        series.forEach(s => {
+            const filtrar = listaEquipos.filter(e => e.serie === s).sort((a,b)=> b.pts - a.pts || b.dg - a.dg);
+            let html = `<div style="background:#ff5722; color:white; padding:8px 12px; margin-top:15px; border-radius:4px; font-weight:bold;">🏆 SERIE ${s.toUpperCase()}</div><table><thead><tr><th>Pos</th><th style="text-align:left; padding-left:15px;">Club</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead><tbody>`;
+            filtrar.forEach((eq, idx) => {
+                html += `<tr><td><b>${idx+1}</b></td><td style="text-align:left;"><div style="display:flex; align-items:center; gap:10px;"><img src="${eq.logo}" style="width:25px; height:25px; object-fit:contain;">${eq.nombre}</div></td><td>${eq.pj}</td><td>${eq.pg}</td><td>${eq.pe}</td><td>${eq.pp}</td><td>${eq.gf}</td><td>${eq.gc}</td><td>${eq.dg>=0?'+'+eq.dg:eq.dg}</td><td style="font-weight:bold; color:#d35400;">${eq.pts}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+            contenedorTablas.innerHTML += html;
+        });
+    }
+
+    const tbodyGoles = document.getElementById('tablaGoleadores').getElementsByTagName('tbody')[0];
+    tbodyGoles.innerHTML = "";
+    const arrGoleadores = Object.values(dbOficial.goleadores).sort((a,b)=> b.goles - a.goles);
+    arrGoleadores.forEach(g => {
+        tbodyGoles.innerHTML += `<tr><td><b>${g.jugador}</b></td><td>${g.club}</td><td><mark>${g.goles} Goles</mark></td></tr>`;
+    });
+
+    const contenedorSanciones = document.getElementById('contenedorSanciones');
+    contenedorSanciones.innerHTML = "";
+    const arrSancionados = Object.values(dbOficial.disciplina).filter(j => j.suspension > 0);
+    if(arrSancionados.length === 0) contenedorSanciones.innerHTML = "<p style='color:green; font-size:13px;'>🕊️ Sin jugadores suspendidos.</p>";
+    arrSancionados.forEach(j => {
+        contenedorSanciones.innerHTML += `<div class="tarjeta-suspension">❌ ${j.jugador} (${j.club}) <br> <span style="color:#c0392b; font-size:11px;">Motivo: ${j.motivo} | Restan: ${j.suspension} Fecha(s)</span></div>`;
+    });
+
+    const tbodyFinanzas = document.getElementById('tablaFinanzas').getElementsByTagName('tbody')[0];
+    tbodyFinanzas.innerHTML = "";
+    Object.keys(dbOficial.equipos).forEach(nombre => {
+        const fin = dbOficial.finanzas[nombre] || { deuda: 0, detalle: "Sin registros", comprobante: null };
+        const badge = fin.deuda > 0 ? `<span class="badge-deudor">DEUDOR</span>` : `<span class="badge-al-dia">AL DÍA</span>`;
+        const img = fin.comprobante ? `<img src="${fin.comprobante}" class="comprobante-preview" alt="Recibo">` : `<i>Ninguno</i>`;
+        tbodyFinanzas.innerHTML += `<tr><td><b>${nombre}</b></td><td>${badge}</td><td style="font-weight:bold; color:${fin.deuda>0?'#e74c3c':'#27ae60'}">$${fin.deuda}</td><td>${fin.detalle}</td><td>${img}</td></tr>`;
+    });
+}
+
+// ================= GENERADORES DE REPORTE PDF =================
+function generarPlantillaBasePDF(titulo) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFillColor(211, 84, 0); doc.rect(0, 0, 220, 25, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont("Helvetica", "bold"); doc.setFontSize(15);
+    doc.text("ASOCIACIÓN DE FÚTBOL PRESIDENTE RÍOS", 15, 16);
+    doc.setTextColor(80, 80, 80); doc.setFontSize(11); doc.setFont("Helvetica", "normal");
+    doc.text(`Documento Oficial Emitido el: ${new Date().toLocaleDateString()}`, 15, 33);
+    doc.setFontSize(13); doc.setFont("Helvetica", "bold"); doc.setTextColor(211, 84, 0);
+    doc.text(titulo, 15, 42);
+    return doc;
+}
+
+function descargarPDFPosiciones() {
+    const listaEquipos = Object.values(dbOficial.equipos);
+    if(listaEquipos.length === 0) return alert("No hay clasificaciones cargadas.");
+    const doc = generarPlantillaBasePDF("TABLAS DE POSICIONES OFICIALES DEL CAMPEONATO");
+    let yPos = 48;
+    const series = [...new Set(listaEquipos.map(e => e.serie))].sort((a,b)=>determinarOrdenSeries(a)-determinarOrdenSeries(b));
+    series.forEach(s => {
+        doc.setFontSize(11); doc.setTextColor(44, 62, 80); doc.text(`CATEGORÍA: SERIE ${s.toUpperCase()}`, 15, yPos);
+        const columnas = ["Pos", "Club", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "PTS"];
+        const filas = listaEquipos.filter(e => e.serie === s).sort((a,b)=> b.pts - a.pts || b.dg - a.dg).map((eq, idx) => [idx+1, eq.nombre, eq.pj, eq.pg, eq.pe, eq.pp, eq.gf, eq.gc, eq.dg, eq.pts]);
+        doc.autoTable({ head: [columnas], body: filas, startY: yPos + 3, theme: 'striped', headStyles: { fillColor: [44, 62, 80] } });
+        yPos = doc.lastAutoTable.finalY + 12;
+    });
+    doc.save("Clasificaciones_Presidente_Rios.pdf");
+}
+
+function descargarPDFGoleadores() {
+    const arrGoleadores = Object.values(dbOficial.goleadores).sort((a,b)=> b.goles - a.goles);
+    if(arrGoleadores.length === 0) return alert("No hay goleadores.");
+    const doc = generarPlantillaBasePDF("REPORTE OFICIAL - TABLA DE ARTILLEROS");
+    doc.autoTable({ head: [["Jugador", "Club", "Goles"]], body: arrGoleadores.map(g => [g.jugador, g.club, `${g.goles} Goles`]), startY: 48, theme: 'grid', headStyles: { fillColor: [44, 62, 80] } });
+    doc.save("Goleadores_Presidente_Rios.pdf");
+}
+
+function descargarPDFSanciones() {
+    const arrSancionados = Object.values(dbOficial.disciplina).filter(j => j.suspension > 0);
+    if(arrSancionados.length === 0) return alert("No hay suspendidos.");
+    const doc = generarPlantillaBasePDF("REPORTE DISCIPLINARIO - SUSPENDIDOS");
+    doc.autoTable({ head: [["Jugador", "Club", "Motivo", "Restan"]], body: arrSancionados.map(j => [j.jugador, j.club, j.motivo, `${j.suspension} Fecha(s)`]), startY: 48, theme: 'striped', headStyles: { fillColor: [192, 57, 43] } });
+    doc.save("Sanciones_Presidente_Rios.pdf");
+}
+
+function descargarPDFFinanzas() {
+    const listaEquipos = Object.keys(dbOficial.equipos);
+    if(listaEquipos.length === 0) return alert("Sin registros.");
+    const doc = generarPlantillaBasePDF("REPORTE GLOBAL DE TESORERÍA");
+    const filas = listaEquipos.map(nombre => { const fin = dbOficial.finanzas[nombre] || { deuda: 0, detalle: "Sin registros" }; return [nombre, fin.deuda > 0 ? "DEUDOR" : "AL DÍA", `$${fin.deuda}`, fin.detalle]; });
+    doc.autoTable({ head: [["Club", "Estado", "Monto Pendiente", "Observación"]], body: filas, startY: 48, theme: 'grid', headStyles: { fillColor: [44, 62, 80] } });
+    doc.save("Reporte_Financiero_Presidente_Rios.pdf");
+}
+
+// Carga automática inicial remota
+inicializarBaseDeDatos();
+</script>
+</body>
+</html>
