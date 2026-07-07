@@ -50,11 +50,19 @@
         th { background-color: #2c3e50; color: white; font-size: 12px; text-transform: uppercase; }
         tr:hover { background-color: #fffbf9; }
         
-        /* Tarjetas de Alerta */
+        /* Tarjetas de Alerta y Resúmenes */
         .badge-deudor { background-color: #fde8e8; color: #e74c3c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: 1px solid #f8b4b4; }
         .badge-al-dia { background-color: #def7ec; color: #03543f; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
         .tarjeta-suspension { background: #fde8e8; border-left: 4px solid #e74c3c; padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
         
+        /* Cuadros de Rendición */
+        .grid-rendicion { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; margin-bottom: 15px; }
+        .card-rendicion { padding: 15px; border-radius: 6px; color: white; font-weight: bold; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card-ingresos { background-color: #27ae60; }
+        .card-deudas { background-color: #e74c3c; }
+        .card-total { background-color: #2980b9; }
+        .monto-rendicion { font-size: 22px; margin-top: 5px; display: block; font-family: monospace; }
+
         /* Modales y Utilidades */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(2px); }
         .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; max-width: 350px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid #ff5722; }
@@ -71,7 +79,7 @@
     <!-- ENCABEZADO -->
     <div class="header-bar">
         <div class="logo-contenedor">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Football_orange.svg/120px-Football_orange.svg.png" class="logo-asociacion-principal" alt="Logo">
+            <img src="https://images2.imgbox.com/39/33/D2PZl7e2_o.png" class="logo-asociacion-principal" alt="Logo">
             <div>
                 <h1>Asociación de Fútbol Presidente Ríos</h1>
                 <span id="badgeRolActivo" class="badge-rol-activo oculto"></span>
@@ -122,6 +130,27 @@
     <!-- ================= PANEL TESORERÍA (teso123) ================= -->
     <div id="panelTesoreria" class="panel-rol oculto">
         <h2>💰 Gestión de Tesorería y Finanzas</h2>
+        
+        <!-- MÓDULO NUEVO: RESUMEN INTERNO DE RENDICIÓN -->
+        <div class="seccion-modulo">
+            <h3>📊 Panel Rápido de Rendición de Cuentas</h3>
+            <div class="grid-rendicion">
+                <div class="card-rendicion card-ingresos">
+                    📥 Total Ingresos Recaudados (Pagados)
+                    <span id="rendIngresos" class="monto-rendicion">$0</span>
+                </div>
+                <div class="card-rendicion card-deudas">
+                    ⚠️ Total Cuentas por Cobrar (Deudas)
+                    <span id="rendDeudas" class="monto-rendicion">$0</span>
+                </div>
+                <div class="card-rendicion card-total">
+                    💼 Capital Total Estimado
+                    <span id="rendTotal" class="monto-rendicion">$0</span>
+                </div>
+            </div>
+            <button class="btn-azul" onclick="descargarPDFRendicionCuentas()" style="background-color: #27ae60; margin-bottom: 10px;">📄 Generar PDF de Rendición Oficial</button>
+        </div>
+
         <div class="seccion-modulo">
             <h3>💵 Asignar Deuda / Cobro a Club</h3>
             <div class="flex-inputs">
@@ -204,12 +233,25 @@
 
         <!-- Balance Financiero General -->
         <div class="titulo-seccion-publica">
-            <span>💰 BALANCE DE TESORERÍA</span>
-            <button class="btn-pdf" onclick="descargarPDFFinanzas()">📄 Descargar Reporte Financiero (PDF)</button>
+            <span>💰 BALANCE DE TESORERÍA Y RENDICIÓN PÚBLICA</span>
+            <button class="btn-pdf" onclick="descargarPDFRendicionCuentas()">📄 Descargar Rendición General (PDF)</button>
         </div>
+        
+        <!-- RENDICIÓN PÚBLICA INTEGRADA -->
+        <div class="grid-rendicion" style="margin-top: 15px;">
+            <div class="card-rendicion card-ingresos" style="opacity: 0.9;">
+                📥 Total Recaudado (Al día)
+                <span id="pubIngresos" class="monto-rendicion">$0</span>
+            </div>
+            <div class="card-rendicion card-deudas" style="opacity: 0.9;">
+                ⚠️ Total Pendiente de Cobro
+                <span id="pubDeudas" class="monto-rendicion">$0</span>
+            </div>
+        </div>
+
         <table id="tablaFinanzas">
             <thead>
-                <tr><th>Club</th><th>Estado Cuenta</th><th>Deuda Acumulada</th><th>Detalle Pendiente</th><th>Comprobante</th></tr>
+                <tr><th>Club</th><th>Estado Cuenta</th><th>Deuda Acumulada</th><th>Detalle Pendiente / Último Movimiento</th><th>Comprobante</th></tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -317,7 +359,13 @@ async function descargarDeLaNube() {
         if(data.record) {
             dbBorrador = data.record;
             dbOficial = JSON.parse(JSON.stringify(data.record));
+            // Asegurar que exista el historial o formato extendido de finanzas
+            Object.keys(dbBorrador.equipos).forEach(c => {
+                if(!dbBorrador.finanzas[c]) dbBorrador.finanzas[c] = { deudasHistorial: [], recaudado: 0, deuda: 0, detalle: "Sin deudas", comprobante: null };
+                if(dbBorrador.finanzas[c].recaudado === undefined) dbBorrador.finanzas[c].recaudado = 0;
+            });
             actualizarSelectores();
+            calcularRendicionPantalla();
             renderizarTodoPublico();
             console.log("Datos actualizados desde el servidor remoto.");
         }
@@ -359,10 +407,11 @@ function agregarEquipo() {
 
 function registrarEfectivo(nombre, serie, logo) {
     dbBorrador.equipos[nombre] = { nombre, serie, logo, pj:0, pg:0, pe:0, pp:0, gf:0, gc:0, dg:0, pts:0 };
-    if (!dbBorrador.finanzas[nombre]) dbBorrador.finanzas[nombre] = { deuda: 0, detalle: "Sin deudas", comprobante: null };
+    if (!dbBorrador.finanzas[nombre]) dbBorrador.finanzas[nombre] = { deuda: 0, recaudado: 0, detalle: "Sin deudas", comprobante: null };
     document.getElementById('nuevoNombre').value = "";
     document.getElementById('nuevoLogo').value = "";
     actualizarSelectores();
+    calcularRendicionPantalla();
     alert("Club guardado temporalmente. Presiona 'Publicar' al finalizar.");
 }
 
@@ -415,6 +464,21 @@ function procesarPartido() {
     alert("Resultado guardado en borrador.");
 }
 
+function calcularRendicionPantalla() {
+    let ingresosBorrador = 0;
+    let deudasBorrador = 0;
+
+    Object.keys(dbBorrador.equipos).forEach(c => {
+        const fin = dbBorrador.finanzas[c] || { deuda: 0, recaudado: 0 };
+        deudasBorrador += fin.deuda || 0;
+        ingresosBorrador += fin.recaudado || 0;
+    });
+
+    document.getElementById('rendIngresos').innerText = `$${ingresosBorrador}`;
+    document.getElementById('rendDeudas').innerText = `$${deudasBorrador}`;
+    document.getElementById('rendTotal').innerText = `$${ingresosBorrador + deudasBorrador}`;
+}
+
 function agregarDeuda() {
     const club = document.getElementById('tesoClubSelect').value;
     const detalle = document.getElementById('tesoDetalle').value.trim();
@@ -422,10 +486,11 @@ function agregarDeuda() {
     if (!club || !detalle || monto <= 0) return alert("Datos inválidos.");
     
     dbBorrador.finanzas[club].deuda += monto;
-    dbBorrador.finanzas[club].detalle = detalle;
+    dbBorrador.finanzas[club].detalle = `Pendiente: ${detalle} ($${monto})`;
     dbBorrador.finanzas[club].comprobante = null; 
     document.getElementById('tesoDetalle').value = "";
     document.getElementById('tesoMonto').value = "";
+    calcularRendicionPantalla();
     alert("Cargo registrado en borrador.");
 }
 
@@ -434,13 +499,18 @@ function registrarPagoClub() {
     const archivoInput = document.getElementById('tesoComprobante');
     if (!club) return alert("Seleccione el club.");
     
+    const deudaAPagar = dbBorrador.finanzas[club].deuda;
+    if (deudaAPagar <= 0) return alert("Este club no registra deudas pendientes.");
+
     if (archivoInput.files && archivoInput.files[0]) {
         const lector = new FileReader();
         lector.onload = function(e) {
+            dbBorrador.finanzas[club].recaudado += deudaAPagar; 
             dbBorrador.finanzas[club].deuda = 0;
-            dbBorrador.finanzas[club].detalle = "Pagado / Al día";
+            dbBorrador.finanzas[club].detalle = `Último pago recibido con éxito ($${deudaAPagar})`;
             dbBorrador.finanzas[club].comprobante = e.target.result;
-            alert("Pago procesado en borrador.");
+            calcularRendicionPantalla();
+            alert("Pago procesado en borrador y sumado a Ingresos Recaudados.");
         };
         lector.readAsDataURL(archivoInput.files[0]);
     } else {
@@ -500,6 +570,7 @@ async function reiniciarTodo() {
         dbBorrador = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
         dbOficial = { equipos: {}, goleadores: {}, disciplina: {}, finanzas: {} };
         actualizarSelectores();
+        calcularRendicionPantalla();
         renderizarTodoPublico();
         await subirALaNube();
     }
@@ -545,14 +616,23 @@ function renderizarTodoPublico() {
         contenedorSanciones.innerHTML += `<div class="tarjeta-suspension">❌ ${j.jugador} (${j.club}) <br> <span style="color:#c0392b; font-size:11px;">Motivo: ${j.motivo} | Restan: ${j.suspension} Fecha(s)</span></div>`;
     });
 
+    // Renderizar Cajas de Rendición Pública e Historial Financiero
+    let pubIng = 0; let pubDeu = 0;
     const tbodyFinanzas = document.getElementById('tablaFinanzas').getElementsByTagName('tbody')[0];
     tbodyFinanzas.innerHTML = "";
+    
     Object.keys(dbOficial.equipos).forEach(nombre => {
-        const fin = dbOficial.finanzas[nombre] || { deuda: 0, detalle: "Sin registros", comprobante: null };
+        const fin = dbOficial.finanzas[nombre] || { deuda: 0, recaudado:0, detalle: "Sin registros", comprobante: null };
+        pubIng += fin.recaudado || 0;
+        pubDeu += fin.deuda || 0;
+        
         const badge = fin.deuda > 0 ? `<span class="badge-deudor">DEUDOR</span>` : `<span class="badge-al-dia">AL DÍA</span>`;
         const img = fin.comprobante ? `<img src="${fin.comprobante}" class="comprobante-preview" alt="Recibo">` : `<i>Ninguno</i>`;
         tbodyFinanzas.innerHTML += `<tr><td><b>${nombre}</b></td><td>${badge}</td><td style="font-weight:bold; color:${fin.deuda>0?'#e74c3c':'#27ae60'}">$${fin.deuda}</td><td>${fin.detalle}</td><td>${img}</td></tr>`;
     });
+
+    document.getElementById('pubIngresos').innerText = `$${pubIng}`;
+    document.getElementById('pubDeudas').innerText = `$${pubDeu}`;
 }
 
 // ================= GENERADORES DE REPORTE PDF =================
@@ -567,6 +647,52 @@ function generarPlantillaBasePDF(titulo) {
     doc.setFontSize(13); doc.setFont("Helvetica", "bold"); doc.setTextColor(211, 84, 0);
     doc.text(titulo, 15, 42);
     return doc;
+}
+
+function descargarPDFRendicionCuentas() {
+    const listaEquipos = Object.keys(dbOficial.equipos);
+    if(listaEquipos.length === 0) return alert("No hay datos cargados para generar una rendición.");
+    
+    const doc = generarPlantillaBasePDF("INFORME OFICIAL DE RENDICIÓN DE CUENTAS");
+    
+    let totalIngresos = 0;
+    let totalDeudas = 0;
+    
+    const filas = listaEquipos.map(nombre => {
+        const fin = dbOficial.finanzas[nombre] || { deuda: 0, recaudado: 0, detalle: "Sin movimientos" };
+        totalIngresos += fin.recaudado || 0;
+        totalDeudas += fin.deuda || 0;
+        return [nombre, `$${fin.recaudado}`, `$${fin.deuda}`, fin.detalle];
+    });
+
+    // Tabla de Resumen Ejecutivo Superior
+    doc.setFontSize(11); doc.setTextColor(44, 62, 80); doc.setFont("Helvetica", "bold");
+    doc.text("RESUMEN GENERAL DE TESORERÍA:", 15, 52);
+    
+    doc.setFont("Helvetica", "normal");
+    doc.text(`(+) Total Ingresos Netos Percibidos: $${totalIngresos}`, 20, 60);
+    doc.text(`(⚠️) Total de Cuentas por Cobrar Pendientes: $${totalDeudas}`, 20, 67);
+    doc.setFont("Helvetica", "bold"); doc.setTextColor(39, 174, 96);
+    doc.text(`(=) Patrimonio Total Estimado de la Asociación: $${totalIngresos + totalDeudas}`, 20, 74);
+    
+    doc.setFont("Helvetica", "bold"); doc.setTextColor(44, 62, 80);
+    doc.text("DESGLOSE INDIVIDUAL POR CLUBES ASOCIADOS:", 15, 85);
+
+    doc.autoTable({
+        head: [["Club de la Liga", "Total Aportado/Pagado", "Deuda Pendiente", "Última Observación/Detalle"]],
+        body: filas,
+        startY: 89,
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80] },
+        styles: { fontSize: 10 }
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 25;
+    doc.line(70, finalY, 140, finalY);
+    doc.setFontSize(10); doc.text("Firma y Timbre Tesorero General", 77, finalY + 5);
+    doc.text("Asociación de Fútbol Presidente Ríos", 74, finalY + 10);
+
+    doc.save("Rendicion_Cuentas_Presidente_Rios.pdf");
 }
 
 function descargarPDFPosiciones() {
@@ -599,15 +725,6 @@ function descargarPDFSanciones() {
     const doc = generarPlantillaBasePDF("REPORTE DISCIPLINARIO - SUSPENDIDOS");
     doc.autoTable({ head: [["Jugador", "Club", "Motivo", "Restan"]], body: arrSancionados.map(j => [j.jugador, j.club, j.motivo, `${j.suspension} Fecha(s)`]), startY: 48, theme: 'striped', headStyles: { fillColor: [192, 57, 43] } });
     doc.save("Sanciones_Presidente_Rios.pdf");
-}
-
-function descargarPDFFinanzas() {
-    const listaEquipos = Object.keys(dbOficial.equipos);
-    if(listaEquipos.length === 0) return alert("Sin registros.");
-    const doc = generarPlantillaBasePDF("REPORTE GLOBAL DE TESORERÍA");
-    const filas = listaEquipos.map(nombre => { const fin = dbOficial.finanzas[nombre] || { deuda: 0, detalle: "Sin registros" }; return [nombre, fin.deuda > 0 ? "DEUDOR" : "AL DÍA", `$${fin.deuda}`, fin.detalle]; });
-    doc.autoTable({ head: [["Club", "Estado", "Monto Pendiente", "Observación"]], body: filas, startY: 48, theme: 'grid', headStyles: { fillColor: [44, 62, 80] } });
-    doc.save("Reporte_Financiero_Presidente_Rios.pdf");
 }
 
 // Carga automática inicial remota
